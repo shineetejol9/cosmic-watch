@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Watch - NEO Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&amp;family=Rajdhani:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full w-full bg-slate-950 text-white overflow-hidden">
+  <div id="app" class="h-full w-full relative overflow-hidden"><!-- Animated Falling Asteroids Background -->
+   <div id="asteroid-container" class="fixed inset-0 pointer-events-none z-0"></div><!-- Starfield Background -->
+   <div id="starfield" class="fixed inset-0 pointer-events-none opacity-50 z-0"></div><!-- Main Content (z-index: 20) -->
+   <div class="relative z-20 h-full w-full flex flex-col overflow-hidden"><!-- Auth Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+     <div class="glass-panel rounded-2xl p-8 max-w-md w-full relative overflow-hidden">
+      <div class="absolute inset-0 scan-effect pointer-events-none"></div>
+      <div class="relative z-10">
+       <div class="text-center mb-8">
+        <div class="w-20 h-20 mx-auto mb-4 relative">
+         <svg viewbox="0 0 100 100" class="w-full h-full float-slow-animation"><circle cx="50" cy="50" r="30" fill="none" stroke="rgba(34, 211, 238, 0.3)" stroke-width="2" /> <circle cx="50" cy="50" r="20" fill="none" stroke="rgba(34, 211, 238, 0.5)" stroke-width="1" /> <circle cx="50" cy="50" r="8" fill="#22d3ee" /> <circle cx="50" cy="20" r="4" fill="#fbbf24" class="orbit-animation" style="transform-origin: 50px 50px;" />
+         </svg>
+        </div>
+        <h2 class="font-display text-2xl text-cyan-400 glow-text" id="auth-title">Welcome to Cosmic Watch</h2>
+        <p class="text-slate-400 mt-2">Sign in to track asteroids and receive alerts</p>
+       </div>
+       <form id="auth-form" class="space-y-4">
+        <div id="name-field" class="hidden"><label for="auth-name" class="block text-sm text-slate-400 mb-1">Display Name</label> <input type="text" id="auth-name" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:border-cyan-500 focus:outline-none transition-all duration-300 focus:ring-2 focus:ring-cyan-500/30" placeholder="Commander Nova">
+        </div>
+        <div><label for="auth-email" class="block text-sm text-slate-400 mb-1">Email Address</label> <input type="email" id="auth-email" required class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:border-cyan-500 focus:outline-none transition-all duration-300 focus:ring-2 focus:ring-cyan-500/30" placeholder="astronaut@space.com">
+        </div>
+        <div><label for="auth-password" class="block text-sm text-slate-400 mb-1">Access Code</label> <input type="password" id="auth-password" required minlength="4" class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:border-cyan-500 focus:outline-none transition-all duration-300 focus:ring-2 focus:ring-cyan-500/30" placeholder="••••••••">
+        </div><button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg font-semibold transition-all duration-300 font-display tracking-wider transform hover:scale-105 active:scale-95"> <span id="auth-btn-text">INITIATE ACCESS</span> </button>
+       </form>
+       <p class="text-center mt-6 text-slate-500 text-sm"><span id="auth-toggle-text">New researcher?</span> <button type="button" id="auth-toggle" class="text-cyan-400 hover:text-cyan-300 ml-1 transition-colors">Create Account</button></p>
+      </div>
+     </div>
+    </div><!-- Header -->
+    <header class="glass-panel border-b border-cyan-900/30 px-4 lg:px-8 py-4 flex-shrink-0">
+     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+       <div class="w-12 h-12 relative flex-shrink-0 float-animation">
+        <svg viewbox="0 0 100 100" class="w-full h-full"><circle cx="50" cy="50" r="35" fill="none" stroke="rgba(34, 211, 238, 0.3)" stroke-width="2" /> <circle cx="50" cy="50" r="25" fill="none" stroke="rgba(34, 211, 238, 0.5)" stroke-width="1" stroke-dasharray="5 3" /> <circle cx="50" cy="50" r="10" fill="#22d3ee" /> <circle cx="50" cy="15" r="5" fill="#fbbf24" class="orbit-animation" style="transform-origin: 50px 50px; animation-duration: 8s;" /> <circle cx="85" cy="50" r="3" fill="#ef4444" class="orbit-animation" style="transform-origin: 50px 50px; animation-duration: 12s; animation-delay: -4s;" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="main-title" class="font-display text-xl lg:text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent glow-text">COSMIC WATCH</h1>
+        <p id="subtitle" class="text-slate-400 text-sm">Near-Earth Object Monitoring System</p>
+       </div>
+      </div>
+      <div class="flex items-center gap-4">
+       <div id="user-info" class="hidden items-center gap-3 px-4 py-2 glass-panel rounded-lg">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-display text-sm float-animation" id="user-avatar">
+         ?
+        </div><span id="user-name-display" class="text-sm text-slate-300">Guest</span> <button id="logout-btn" class="text-slate-500 hover:text-red-400 transition-colors ml-2 hover:scale-110 transform duration-200">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+         </svg></button>
+       </div><button id="login-btn" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg font-display text-sm tracking-wider transition-all duration-300 transform hover:scale-105 active:scale-95"> SIGN IN </button>
+      </div>
+     </div>
+    </header><!-- Stats Bar -->
+    <div class="glass-panel border-b border-cyan-900/30 px-4 lg:px-8 py-3 flex-shrink-0">
+     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="stat-item flex items-center gap-3" style="--stat-index: 0;">
+       <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center float-animation">
+        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+       </div>
+       <div>
+        <p class="text-xs text-slate-500 uppercase tracking-wider">Total NEOs</p>
+        <p id="stat-total" class="font-display text-xl text-cyan-400 glow-text">--</p>
+       </div>
+      </div>
+      <div class="stat-item flex items-center gap-3" style="--stat-index: 1;">
+       <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center float-animation" style="animation-delay: 0.3s;">
+        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+       </div>
+       <div>
+        <p class="text-xs text-slate-500 uppercase tracking-wider">Hazardous</p>
+        <p id="stat-hazardous" class="font-display text-xl text-red-400 glow-text">--</p>
+       </div>
+      </div>
+      <div class="stat-item flex items-center gap-3" style="--stat-index: 2;">
+       <div class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center float-animation" style="animation-delay: 0.6s;">
+        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+       </div>
+       <div>
+        <p class="text-xs text-slate-500 uppercase tracking-wider">Watching</p>
+        <p id="stat-watching" class="font-display text-xl text-yellow-400 glow-text">0</p>
+       </div>
+      </div>
+      <div class="stat-item flex items-center gap-3" style="--stat-index: 3;">
+       <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center float-animation" style="animation-delay: 0.9s;">
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+       <div>
+        <p class="text-xs text-slate-500 uppercase tracking-wider">Closest Today</p>
+        <p id="stat-closest" class="font-display text-lg text-green-400 glow-text">--</p>
+       </div>
+      </div>
+     </div>
+    </div><!-- Main Content -->
+    <div class="flex-1 overflow-auto p-4 lg:p-8">
+     <div class="grid grid-cols-1 xl:grid-cols-4 gap-6"><!-- 3D Orbit Viewer -->
+      <div class="glass-panel rounded-2xl overflow-hidden flex flex-col max-h-[600px]">
+       <div class="px-6 py-4 border-b border-cyan-900/30">
+        <h2 class="font-display text-lg text-cyan-400 glow-text" id="orbit-title">3D ORBIT VIEW</h2>
+        <p class="text-sm text-slate-500" id="orbit-subtitle">Click an asteroid to view</p>
+       </div>
+       <div class="flex-1 relative bg-slate-900/30 overflow-hidden">
+        <canvas id="orbit-canvas-3d" class="w-full h-full"></canvas>
+        <div id="orbit-placeholder" class="absolute inset-0 flex items-center justify-center flex-col">
+         <svg class="w-16 h-16 mb-4 text-slate-600 opacity-50 animate-pulse" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+         <p class="text-slate-500 text-center text-sm">Select an asteroid from the list to view its 3D orbital trajectory</p>
+        </div>
+       </div>
+       <div class="px-6 py-3 border-t border-cyan-900/30 bg-slate-900/30 text-xs text-slate-500">
+        <p>🖱️ Drag to rotate • 🔄 Auto-orbit enabled</p>
+       </div>
+      </div><!-- NEO List Panel -->
+      <div class="xl:col-span-3 glass-panel rounded-2xl overflow-hidden flex flex-col max-h-[600px]">
+       <div class="px-6 py-4 border-b border-cyan-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+         <h2 class="font-display text-lg text-cyan-400 glow-text">NEAR-EARTH OBJECTS</h2>
+         <p class="text-sm text-slate-500">Today's close approaches</p>
+        </div>
+        <div class="flex items-center gap-2"><button id="filter-all" class="px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all duration-300 hover:scale-105 active:scale-95">ALL</button> <button id="filter-hazardous" class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700 hover:border-red-500/50 hover:text-red-400 transition-all duration-300 hover:scale-105 active:scale-95">HAZARDOUS</button> <button id="refresh-btn" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-all duration-300 group transform hover:scale-110 active:scale-95">
+          <svg id="refresh-icon" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400 transition-colors" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg></button>
+        </div>
+       </div>
+       <div id="neo-list" class="p-4 space-y-3 overflow-y-auto flex-1">
+        <div class="flex items-center justify-center py-12">
+         <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-4 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+          <p class="text-slate-400">Scanning the cosmos...</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div><!-- Right Sidebar (Below Main Grid) -->
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6"><!-- Risk Analysis Panel -->
+      <div class="glass-panel rounded-2xl overflow-hidden">
+       <div class="px-6 py-4 border-b border-cyan-900/30">
+        <h2 class="font-display text-lg text-cyan-400 glow-text">RISK ANALYSIS</h2>
+        <p class="text-sm text-slate-500">Current threat assessment</p>
+       </div>
+       <div class="p-6">
+        <div id="risk-display" class="text-center">
+         <div class="relative w-32 h-32 mx-auto mb-4">
+          <svg viewbox="0 0 100 100" class="w-full h-full transform -rotate-90"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(34, 211, 238, 0.1)" stroke-width="8" /> <circle id="risk-circle" cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="8" stroke-dasharray="251.2" stroke-dashoffset="200" stroke-linecap="round" class="transition-all duration-1000" />
+          </svg>
+          <div class="absolute inset-0 flex items-center justify-center flex-col"><span id="risk-score" class="font-display text-3xl text-green-400 glow-text">--</span> <span class="text-xs text-slate-500 uppercase">Risk Score</span>
+          </div>
+         </div>
+         <p id="risk-label" class="font-display text-sm text-green-400 mb-4 glow-text">CALCULATING...</p>
+         <div class="risk-meter h-2 rounded-full mb-2"></div>
+         <div class="flex justify-between text-xs text-slate-500"><span>Low</span> <span>Moderate</span> <span>High</span>
+         </div>
+        </div>
+       </div>
+      </div><!-- Watchlist Panel -->
+      <div class="glass-panel rounded-2xl overflow-hidden">
+       <div class="px-6 py-4 border-b border-cyan-900/30">
+        <h2 id="alert-section-title" class="font-display text-lg text-yellow-400 glow-text">YOUR WATCHLIST</h2>
+        <p class="text-sm text-slate-500">Tracked asteroids &amp; alerts</p>
+       </div>
+       <div id="watchlist" class="p-4 max-h-[250px] overflow-y-auto">
+        <div id="watchlist-empty" class="text-center py-8">
+         <svg class="w-12 h-12 mx-auto mb-3 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+         </svg>
+         <p class="text-slate-500 text-sm">No asteroids watched</p>
+         <p class="text-slate-600 text-xs mt-1">Sign in to track objects</p>
+        </div>
+        <div id="watchlist-items" class="space-y-2 hidden"></div>
+       </div>
+      </div><!-- Alert Notifications -->
+      <div id="alerts-panel" class="glass-panel rounded-2xl overflow-hidden hidden">
+       <div class="px-6 py-4 border-b border-red-900/30 bg-red-500/10">
+        <h2 class="font-display text-lg text-red-400 glow-text flex items-center gap-2">
+         <svg class="w-5 h-5 animate-pulse" fill="currentColor" viewbox="0 0 24 24">
+          <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+         </svg> PROXIMITY ALERTS</h2>
+       </div>
+       <div id="alert-list" class="p-4 space-y-2 max-h-[200px] overflow-y-auto"></div>
+      </div>
+     </div>
+    </div><!-- Footer -->
+    <footer class="glass-panel border-t border-cyan-900/30 px-4 lg:px-8 py-3 flex-shrink-0">
+     <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <p>Data powered by NASA NeoWs API • Updated every 5 minutes</p>
+      <p id="last-updated">Last sync: --</p>
+     </div>
+    </footer>
+   </div><!-- Toast Container -->
+   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+  </div>
+ <script src="index.js"></script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ca827ad46685649',t:'MTc3MDUyMjU0NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
